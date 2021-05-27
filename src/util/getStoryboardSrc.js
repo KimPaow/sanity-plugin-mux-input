@@ -7,8 +7,8 @@ export default function getStoryboardSrc(playbackId, options = {}) {
   let qs = ''
   if (isSigned && options.signingKeyId && options.signingKeyPrivate) {
     const token = generateJwt(playbackId, options.signingKeyId, options.signingKeyPrivate, 's')
-    qs = `?token=${token}`
+    qs = `token=${token}`
   }
 
-  return `https://image.mux.com/${playbackId}/storyboard.json?${qs}`
+  return `https://image.mux.com/${playbackId}/storyboard.vtt?${qs}`
 }

@@ -22,6 +22,7 @@ const propTypes = {
   autoload: PropTypes.bool,
   onCancel: PropTypes.func,
   onReady: PropTypes.func,
+  onClipUpdate: PropTypes.func,
 }
 
 class MuxVideo extends Component {
@@ -41,6 +42,7 @@ class MuxVideo extends Component {
     }
     this.playRef = React.createRef()
     this.muteRef = React.createRef()
+    this.clipRef = React.createRef()
   }
 
   // eslint-disable-next-line complexity
@@ -68,14 +70,37 @@ class MuxVideo extends Component {
   componentDidMount() {
     this.video = React.createRef()
 
-    const style = document.createElement('style')
-    style.innerHTML = 'button svg { vertical-align: middle; }'
+    const buttonIconStyle = document.createElement('style')
+    buttonIconStyle.innerHTML = 'button svg { vertical-align: middle; }'
 
     if (this.playRef?.current?.shadowRoot) {
-      this.playRef.current.shadowRoot.appendChild(style)
+      this.playRef.current.shadowRoot.appendChild(buttonIconStyle)
     }
     if (this.muteRef?.current?.shadowRoot) {
-      this.muteRef.current.shadowRoot.appendChild(style.cloneNode(true))
+      this.muteRef.current.shadowRoot.appendChild(buttonIconStyle.cloneNode(true))
+    }
+
+    if (this.clipRef?.current) {
+      const clipSelector = this.clipRef.current
+
+      if (clipSelector?.shadowRoot) {
+        const clipStyle = document.createElement('style')
+        clipStyle.innerHTML = `
+        #selection {
+          width: 100%;
+        }
+
+        #leftTrim {
+          width: 0%;
+        }
+        `
+        // const selection = clipSelector.querySelector('#selection')
+        clipSelector.shadowRoot.appendChild(clipStyle)
+      }
+
+      clipSelector.addEventListener('update', (evt) => {
+        this.props.onClipUpdate(evt)
+      })
     }
 
     this.setState(MuxVideo.getDerivedStateFromProps(this.props))
@@ -227,9 +252,16 @@ class MuxVideo extends Component {
           {showControls && (
             <media-control-bar>
               <media-play-button ref={this.playRef} />
+              <media-clip-selector ref={this.clipRef}>
+                <style>{`
+                  #selector {
+                    width: 100%;
+                  }
+                `}</style>
+              </media-clip-selector>
               <media-mute-button ref={this.muteRef} />
               <media-volume-range />
-              <media-progress-range />
+              {/* <media-progress-range /> */}
             </media-control-bar>
           )}
         </media-container>
@@ -252,6 +284,7 @@ MuxVideo.defaultProps = {
   autoload: true,
   onCancel: undefined,
   onReady: undefined,
+  onClipUpdate: undefined,
 }
 
 export default MuxVideo

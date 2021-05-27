@@ -98,6 +98,7 @@ export default withDocument(
       this.pollInterval = null
       this.video = React.createRef()
       this.removeVideoButton = React.createRef()
+      this.clipButton = React.createRef()
       this.videoPlayer = React.createRef()
     }
 
@@ -448,6 +449,14 @@ export default withDocument(
       )
     }
 
+    handleClipAsset() {
+      console.log('handleClipAsset', this.state)
+    }
+
+    handleClipUpdate(e) {
+      console.log(e)
+    }
+
     // eslint-disable-next-line complexity
     renderAsset() {
       const {assetDocument, isSigned} = this.state
@@ -468,6 +477,7 @@ export default withDocument(
             ref={this.videoPlayer}
             onReady={this.handleVideoReadyToPlay}
             onCancel={this.handleRemoveVideo}
+            onClipUpdate={this.handleClipUpdate}
           />
         </Stack>
       )
@@ -491,7 +501,15 @@ export default withDocument(
             tone="primary"
             disabled={this.state.videoReadyToPlay === false}
             onClick={this.handleSetThumbButton}
-            text="Thumbnail"
+            text="Set thumb"
+          />,
+          <Button
+            key="clip"
+            ref={this.clipButton}
+            onClick={this.handleClipAsset.bind(this)}
+            mode="ghost"
+            tone="primary"
+            text="Clip"
           />,
           <Button
             key="remove"

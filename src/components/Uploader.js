@@ -337,7 +337,7 @@ class MuxVideoInputUploader extends Component {
   renderButtons() {
     if (this.state.uploadProgress === null && this.props.buttons) {
       return (
-        <Grid columns={4} gap={2}>
+        <Grid columns={5} gap={2}>
           <FileInputButton
             icon={<UploadIcon data-sanity-icon="upload" />}
             onSelect={(files) => this.handleUploadFile(files[0])}
