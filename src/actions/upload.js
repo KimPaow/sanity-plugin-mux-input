@@ -16,6 +16,52 @@ export function cancelUpload(uuid) {
   })
 }
 
+export function uploadClip({clip, asset, options}) {
+  console.log('uploadClip')
+
+  const {enableSignedUrls} = options
+  const uuid = generateUuid()
+
+  const muxBody = {
+    input: [
+      {
+        url: `mux://assets/${asset}`,
+        start_time: clip.startTime,
+        end_time: clip.endTime,
+      },
+    ],
+    playback_policy: [enableSignedUrls ? 'signed' : 'public'],
+  }
+
+  const query = {
+    muxBody: JSON.stringify(muxBody),
+  }
+
+  return defer(() => {
+    console.log('inside defer')
+    return client.observable.request({
+      url: `https://api.mux.com/video/v1/assets`,
+      withCredentials: true,
+      method: 'POST',
+      headers: {
+        'MUX-Proxy-UUID': uuid,
+        'Content-Type': 'application/json',
+      },
+      query,
+    })
+  }).pipe(
+    mergeMap((result) => {
+      console.log('uploadClip | result:', result)
+      const resultAsset =
+        (result && result.results && result.results[0] && result.results[0].document) || null
+      if (!resultAsset) {
+        return throwError(new Error('No asset document returned'))
+      }
+      return of({type: 'success', id: uuid, resultAsset})
+    })
+  )
+}
+
 export function uploadUrl(url, options = {}) {
   return testUrl(url).pipe(
     switchMap((validUrl) => {
@@ -76,6 +122,7 @@ export function uploadFile(file, options = {}) {
             if (!json || !json.status) {
               return throwError(new Error('Invalid credentials'))
             }
+
             const uuid = generateUuid()
             const {enableSignedUrls} = options
             const body = {
@@ -85,6 +132,7 @@ export function uploadFile(file, options = {}) {
               // normalize_audio: false (default),
               // master_access: false (default),
             }
+
             return concat(
               of({type: 'uuid', uuid}),
               defer(() =>

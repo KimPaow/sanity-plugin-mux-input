@@ -12,6 +12,7 @@ import {of} from 'rxjs'
 import {tap} from 'rxjs/operators'
 import {deleteAsset, getAsset} from '../actions/assets'
 import {fetchSecrets} from '../actions/secrets'
+import {uploadClip} from '../actions/upload'
 import client from '../clients/SanityClient'
 import getPosterSrc from '../util/getPosterSrc'
 import styles from './Input.css'
@@ -79,6 +80,7 @@ export default withDocument(
       showSetup: false,
       showBrowser: false,
       videoReadyToPlay: false,
+      clip: null,
     }
 
     constructor(props) {
@@ -102,6 +104,7 @@ export default withDocument(
       this.videoPlayer = React.createRef()
     }
 
+    /* Lifecycle */
     componentDidMount() {
       this.setupAssetListener()
     }
@@ -116,6 +119,7 @@ export default withDocument(
       }
     }
 
+    /* Focus */
     focus = () => {
       this.handleFocus()
     }
@@ -128,7 +132,8 @@ export default withDocument(
       this.setState({hasFocus: false})
     }
 
-    getAsset() {
+    /* Asset */
+    getAssetFromProps() {
       const {value} = this.props
       return value ? value.asset : null
     }
@@ -138,7 +143,7 @@ export default withDocument(
         this.subscription.unsubscribe()
       }
       this.setState({videoReadyToPlay: false})
-      const asset = this.getAsset()
+      const asset = this.getAssetFromProps()
       if (!asset) {
         return
       }
@@ -208,6 +213,7 @@ export default withDocument(
       }, 2000)
     }
 
+    /* Setup */
     handleSetupButtonClicked = (event) => {
       this.setState((prevState) => ({showSetup: !prevState.showStetup}))
     }
@@ -230,6 +236,7 @@ export default withDocument(
       this.setState({showSetup: false})
     }
 
+    /* Upload Handler */
     handleOnUploadComplete = (result) => {
       const {onChange} = this.props
       const {_id} = result
@@ -241,6 +248,7 @@ export default withDocument(
       })
     }
 
+    /* Removal Handlers */
     handleRemoveVideoButtonClicked = (event) => {
       event.preventDefault()
       event.stopPropagation()
@@ -317,6 +325,7 @@ export default withDocument(
       }))
     }
 
+    /* Thumbnail Handler */
     handleSetThumbButton = (event) => {
       if (!this.videoPlayer.current) {
         return
@@ -349,6 +358,7 @@ export default withDocument(
         })
     }
 
+    /* Close Handlers */
     handleErrorClose = (event) => {
       if (event) {
         event.preventDefault()
@@ -370,6 +380,7 @@ export default withDocument(
       this.setState({showBrowser: false})
     }
 
+    /* Select Asset */
     handleSelectAsset = (asset) => {
       const {onChange} = this.props
       onChange(
@@ -387,6 +398,41 @@ export default withDocument(
       this.setState({videoReadyToPlay: true})
     }
 
+    /* Asset Clipping */
+    handleClipAsset() {
+      // create the asset on mux, based on the currently selected one
+      const clip = this.state.clip
+      const asset = this.state.assetDocument
+      const secrets = this.state.secrets
+      // this.createClip({clip, asset, secrets})
+      console.log('handleClipAsset, secrets: ', secrets)
+      const clipTest = uploadClip({clip, asset, options: secrets}).subscribe({
+        complete: (e) => {
+          console.log('complete:', e)
+        },
+        next: (sEvent) => {
+          console.log('sEvent:', sEvent)
+        },
+        error: (err) => {
+          console.log('error:', err)
+        },
+      })
+
+      // create sanity doc with info from new one
+      // replace currently selected one with the new clip
+    }
+
+    handleClipUpdate = (evt) => {
+      const {startTime, endTime} = evt.detail || {}
+      this.setState({
+        clip: {
+          startTime,
+          endTime,
+        },
+      })
+    }
+
+    /* Render */
     renderSetup() {
       const {secrets} = this.state
 
@@ -449,14 +495,6 @@ export default withDocument(
       )
     }
 
-    handleClipAsset() {
-      console.log('handleClipAsset', this.state)
-    }
-
-    handleClipUpdate(e) {
-      console.log(e)
-    }
-
     // eslint-disable-next-line complexity
     renderAsset() {
       const {assetDocument, isSigned} = this.state
@@ -510,6 +548,7 @@ export default withDocument(
             mode="ghost"
             tone="primary"
             text="Clip"
+            disabled={!this.state.clip}
           />,
           <Button
             key="remove"

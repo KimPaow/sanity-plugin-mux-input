@@ -1,5 +1,6 @@
 import {Card, Stack, Text} from '@sanity/ui'
 import Hls from 'hls.js'
+import throttle from 'lodash/throttle'
 import 'media-chrome'
 import Button from 'part:@sanity/components/buttons/default'
 import ProgressBar from 'part:@sanity/components/progress/bar'
@@ -93,14 +94,27 @@ class MuxVideo extends Component {
         #leftTrim {
           width: 0%;
         }
+
+        #timeline {
+          top: 50%;
+          transform: translateY(-50%);
+          height: 4px;
+        }
+
+        #spacer {
+          height: 10px;
+        }
         `
         // const selection = clipSelector.querySelector('#selection')
         clipSelector.shadowRoot.appendChild(clipStyle)
       }
 
-      clipSelector.addEventListener('update', (evt) => {
-        this.props.onClipUpdate(evt)
-      })
+      clipSelector.addEventListener(
+        'update',
+        throttle((evt) => {
+          this.props.onClipUpdate(evt)
+        }, 100)
+      )
     }
 
     this.setState(MuxVideo.getDerivedStateFromProps(this.props))
