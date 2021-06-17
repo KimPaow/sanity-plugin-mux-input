@@ -48,7 +48,8 @@
     "sanipack": "^2.0.1"
   },
   "peerDependencies": {
-    "react": "^16.9 || ^17"
+    "react": "^16.9 || ^17",
+    "@sanity/base": "^2.11"
   },
   "publishConfig": {
     "access": "public"
